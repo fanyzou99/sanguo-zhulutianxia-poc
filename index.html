@@ -3,15 +3,114 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="三国·逐鹿天下 V0.6 POC：React + Phaser 3 + TypeScript 的俯视战棋原型，小队编制、朝向侧背击、兵种图标军旗与地形贴图。"
-    />
-    <title>三国·逐鹿天下 — V0.6 朝向与小队</title>
-    <script type="module" crossorigin src="/sanguo-zhulutianxia-poc/assets/index-if1k6FYl.js"></script>
-    <link rel="stylesheet" crossorigin href="/sanguo-zhulutianxia-poc/assets/index-CJjQcbIV.css">
+    <meta name="description" content="三国·逐鹿天下 V0.7 POC：六边形战棋，11 兵种、地形影响、10 个经典作战场景。" />
+    <title>三国·逐鹿天下 — V0.7 六边形 · 十一兵种</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div id="root"></div>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="seal">漢</div>
+          <div>
+            <h1>三国·逐鹿天下</h1>
+            <p>六边形战棋原型 · 十一兵种 · 地形与战场</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span class="version">V0.7</span>
+          <button id="rulesBtn" class="ghost">作战规则</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="panel scenarios">
+          <div class="panel-title"><h2>作战场景</h2><span>十选一</span></div>
+          <div id="scenarioList" class="scenario-list"></div>
+          <div class="tip">选择战场后自动重新布阵。<br>江水战场才会出现水军舰船。</div>
+        </aside>
+
+        <section class="stage">
+          <div class="stage-head">
+            <div class="stage-title">
+              <h2 id="scenarioTitle">赤壁之战</h2>
+              <p id="scenarioIntro"></p>
+              <div class="objective"><span>胜利目标</span><b id="objective"></b></div>
+            </div>
+            <div class="turn-box">
+              <div class="turn-line"><span id="turnLabel">第 1 回合</span><b id="sideLabel" class="side-pill player">蜀军行动</b></div>
+              <div class="turn-buttons">
+                <button id="endTurn" class="primary">结束回合</button>
+                <button id="resetBtn" class="ghost">重置</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="board-wrap">
+            <div id="board" class="board"></div>
+            <div id="resultBanner" class="result-banner" style="display:none"></div>
+          </div>
+
+          <div id="specialRule" class="special-rule" style="display:none">
+            <b>栈道单列</b>：部队进入栈道后不可越位、不可调换顺序；前队不动，后队难行。
+          </div>
+
+          <div class="legend-wrap">
+            <span class="legend-title">地形</span>
+            <div id="legend" class="legend"></div>
+          </div>
+        </section>
+
+        <aside class="panel side">
+          <div class="card">
+            <div class="panel-title"><h2>部队指令</h2></div>
+            <div id="unitInfo"></div>
+          </div>
+          <div class="card">
+            <div class="panel-title"><h2>兵种图鉴</h2><span>11 类</span></div>
+            <div id="troopList" class="troop-list"></div>
+          </div>
+          <div class="card log-card">
+            <div class="panel-title"><h2>战报</h2></div>
+            <div id="battleLog" class="battle-log"></div>
+          </div>
+        </aside>
+      </main>
+
+      <footer>六边形轴向坐标 · 每回合每部队可移动并攻击一次 · 地形改变移动与伤害</footer>
+    </div>
+
+    <div id="rulesModal" class="modal" style="display:none">
+      <div class="modal-card">
+        <div class="modal-head"><h2>作战规则</h2><button id="closeRules">×</button></div>
+        <div class="modal-body">
+          <h3>一、六边形战场</h3>
+          <p>每个格子有 6 个相邻方向，距离按六边形轴向坐标计算。选中己方部队后，<b>蓝色格</b>为可移动范围，<b>红色标记</b>为可攻击目标。移动与攻击可连续进行，但每支部队每回合只行动一次；攻击后自动结束该部队行动。</p>
+
+          <h3>二、地形影响</h3>
+          <ul>
+            <li><b>山地 ▲</b>：步兵进入消耗 2 点移动力、骑兵 4 点，弓兵／弩兵 3 点；弓箭兵攻击 +30%、弩兵 +20%；山体阻挡普通远程视线（投石车可抛射越过）。器械与象兵不可进山。</li>
+            <li><b>山林 ♠</b>：步兵消耗 2、骑兵 3；弓箭兵攻击 +35%、弩兵 +25%，守军防御 +12%。弩车、投石车不可进林。</li>
+            <li><b>江河 ≈</b>：只有<b>水军舰船</b>可以航行；陆军必须从<b>渡口 ═</b>过江。赤壁、夷陵、官渡、潼关、荆州等有江水的战场才会配置水军。</li>
+            <li><b>城池 城</b>：守军防御 +35%；投石车、弩车、火器攻城伤害提升。</li>
+            <li><b>栈道 ━</b>：单列通行，进入后不可越位或调换顺序（蜀道难）。</li>
+          </ul>
+
+          <h3>三、十一兵种</h3>
+          <p>刀盾兵 · 枪兵 · 戟兵 · 弓箭兵 · 弩兵 · 骑兵 · 象兵 · 弩车 · 投石车 · 兵器（火器） · 水军。</p>
+          <ul>
+            <li>枪兵克骑兵／象兵；骑兵克弓弩；刀盾兵克弓弩；弩兵穿甲克刀盾；戟兵克刀盾与枪兵。</li>
+            <li>象兵生命极高但惧怕火器；火器溅射并克制象兵与江上舰船；水军靠岸接舷，射程 1—2。</li>
+            <li>远程单位在山林／山地中获得攻击加成，投石车射程 3—5 并造成范围伤害。</li>
+          </ul>
+
+          <h3>四、十个战场</h3>
+          <p>赤壁之战（江水横亘）· 合肥之战（纯平原）· 洛阳之战（城池攻守）· 山林之战（山密林深）· 蜀道难（单列栈道）· 夷陵之战（林江交错）· 官渡之战（平原翼击）· 潼关之战（关隘险道）· 荆州之战（江湖水网）· 定军山之战（山地攻坚）。</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
