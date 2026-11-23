@@ -30,6 +30,130 @@ function hexPoints(cx, cy) {
   }).join(' ');
 }
 
+/* ---------- 写实地形细节（参考三国志11 / VAN 地图风格） ---------- */
+// 确定性伪随机：同一格子每次渲染细节一致
+function rnd(c, r, s) {
+  const x = Math.sin(c * 127.1 + r * 311.7 + s * 74.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+const f = n => Number(n).toFixed(1);
+
+// 树丛：树干 + 三层树冠
+function drawTree(x, y, s, light) {
+  const a = light ? '#7fae63' : '#4e7c49';
+  const b = light ? '#9ac476' : '#609155';
+  return `<ellipse cx="${f(x)}" cy="${f(y + 1)}" rx="${f(3 * s)}" ry="${f(1.2 * s)}" fill="rgba(28,48,24,.18)"/>` +
+    `<rect x="${f(x - 0.9 * s)}" y="${f(y)}" width="${f(1.8 * s)}" height="${f(5 * s)}" fill="#6b5236"/>` +
+    `<circle cx="${f(x)}" cy="${f(y - 3 * s)}" r="${f(4.2 * s)}" fill="${a}"/>` +
+    `<circle cx="${f(x - 2 * s)}" cy="${f(y - 1 * s)}" r="${f(3.1 * s)}" fill="${b}"/>` +
+    `<circle cx="${f(x + 2 * s)}" cy="${f(y - 1 * s)}" r="${f(3.1 * s)}" fill="${a}"/>`;
+}
+
+// 山峰：受光面 + 阴影面 + 雪顶 + 山脚植被
+function drawMountain(x, y, w, h) {
+  const lx = x - w / 2, rx = x + w / 2;
+  return `<ellipse cx="${f(x)}" cy="${f(y + 1)}" rx="${f(w * .62)}" ry="${f(h * .13)}" fill="rgba(40,42,36,.22)"/>` +
+    `<path d="M ${f(lx)} ${f(y)} L ${f(x)} ${f(y - h)} L ${f(x)} ${f(y)} Z" fill="#c8c9ba"/>` +
+    `<path d="M ${f(x)} ${f(y - h)} L ${f(rx)} ${f(y)} L ${f(x)} ${f(y)} Z" fill="#8b9082"/>` +
+    `<path d="M ${f(x - .3 * w)} ${f(y - .7 * h)} L ${f(x)} ${f(y - h)} L ${f(x + .3 * w)} ${f(y - .7 * h)} L ${f(x)} ${f(y - .8 * h)} Z" fill="#ecebe0"/>` +
+    `<ellipse cx="${f(x - w * .28)}" cy="${f(y - h * .18)}" rx="${f(w * .2)}" ry="${f(h * .13)}" fill="#6f9460" opacity=".65"/>`;
+}
+
+// 水波：柔和的白色浪纹
+function drawWave(x, y, w, ph) {
+  return `<path d="M ${f(x - w / 2)} ${f(y)} q ${f(w / 4)} ${f(-1.6 + ph)} ${f(w / 2)} 0 q ${f(w / 4)} ${f(1.6 - ph)} ${f(w / 2)} 0" ` +
+    `fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.4" stroke-linecap="round"/>`;
+}
+
+// 方形城墙城池：城墙 + 垛口 + 城门 + 角楼 + 内部院落
+function drawCityWall(cx, cy) {
+  const s = 14;
+  let g = `<ellipse cx="${f(cx)}" cy="${f(cy + 11)}" rx="${f(s + 3)}" ry="4" fill="rgba(40,30,15,.22)"/>`;
+  g += `<rect x="${f(cx - s)}" y="${f(cy - 9)}" width="${f(2 * s)}" height="19" fill="#9a7d5b" stroke="#5e4630" stroke-width="1.2"/>`;
+  for (let i = -2; i <= 2; i++) g += `<rect x="${f(cx + i * 5.2 - 2)}" y="${f(cy - 11.5)}" width="4" height="3.5" fill="#7d6247"/>`;
+  g += `<path d="M ${f(cx - 3.5)} ${f(cy + 10)} L ${f(cx - 3.5)} ${f(cy + 3)} Q ${f(cx)} ${f(cy - 1)} ${f(cx + 3.5)} ${f(cy + 3)} L ${f(cx + 3.5)} ${f(cy + 10)} Z" fill="#503825"/>`;
+  g += `<rect x="${f(cx - s - 1)}" y="${f(cy - 13)}" width="6" height="6" fill="#85694b" stroke="#5e4630" stroke-width=".8"/>`;
+  g += `<rect x="${f(cx + s - 5)}" y="${f(cy - 13)}" width="6" height="6" fill="#85694b" stroke="#5e4630" stroke-width=".8"/>`;
+  g += `<rect x="${f(cx - 7)}" y="${f(cy - 4)}" width="14" height="9" fill="#b79a72" opacity=".85"/>`;
+  g += `<rect x="${f(cx - 2)}" y="${f(cy - 2)}" width="4" height="5" fill="#8a6a45"/>`;
+  return g;
+}
+
+// 单个六边形的地形细节
+function terrainDetail(t, c, r, p) {
+  const x = p.x, y = p.y;
+  let s = '';
+  if (t === 'P') {
+    for (let i = 0; i < 3; i++) {
+      const gx = x + (rnd(c, r, 10 + i) - .5) * 30, gy = y + (rnd(c, r, 20 + i) - .5) * 26;
+      s += `<ellipse cx="${f(gx)}" cy="${f(gy)}" rx="${f(5 + rnd(c, r, 30 + i) * 5)}" ry="3" fill="rgba(120,150,80,.2)"/>`;
+    }
+    for (let i = 0; i < 4; i++) {
+      const gx = x + (rnd(c, r, 40 + i) - .5) * 32, gy = y + (rnd(c, r, 50 + i) - .5) * 28;
+      s += `<path d="M ${f(gx)} ${f(gy)} l -1.5 -3 M ${f(gx)} ${f(gy)} l 1 -2.5 M ${f(gx)} ${f(gy)} l 2 -2" stroke="rgba(78,120,52,.5)" stroke-width="1" fill="none"/>`;
+    }
+  } else if (t === 'F') {
+    for (let i = 0; i < 5; i++) {
+      const gx = x + (rnd(c, r, 10 + i) - .5) * 32, gy = y + 14 - rnd(c, r, 20 + i) * 22;
+      s += drawTree(gx, gy, .8 + rnd(c, r, 30 + i) * .5, rnd(c, r, 40 + i) > .5);
+    }
+  } else if (t === 'M') {
+    const n = 2 + Math.floor(rnd(c, r, 1) * 2);
+    for (let i = 0; i < n; i++) {
+      const mx = x + (rnd(c, r, 10 + i) - .5) * 22, my = y + 13 + (rnd(c, r, 20 + i) - .5) * 6;
+      s += drawMountain(mx, my, 20 + rnd(c, r, 30 + i) * 10, 16 + rnd(c, r, 40 + i) * 12);
+    }
+  } else if (t === 'R') {
+    for (let i = 0; i < 3; i++) {
+      s += drawWave(x, y - 14 + i * 13 + (rnd(c, r, 10 + i) - .5) * 4, 34, rnd(c, r, 20 + i) * 2);
+    }
+  } else if (t === 'B') {
+    for (let i = 0; i < 2; i++) s += drawWave(x, y - 8 + i * 16, 30, .8);
+    for (let i = 0; i < 5; i++) s += `<rect x="${f(x - 14 + i * 6)}" y="${f(y - 6)}" width="5" height="12" rx="1" fill="#a07c4e" stroke="#6b4e2f" stroke-width=".8"/>`;
+  } else if (t === 'D') {
+    s += `<path d="M ${f(x - 18)} ${f(y + 12)} Q ${f(x)} ${f(y - 6)} ${f(x + 18)} ${f(y + 10)}" fill="none" stroke="#cbb486" stroke-width="7" stroke-linecap="round"/>`;
+    s += `<path d="M ${f(x - 18)} ${f(y + 12)} Q ${f(x)} ${f(y - 6)} ${f(x + 18)} ${f(y + 10)}" fill="none" stroke="#8a6f48" stroke-width="1" stroke-dasharray="3 3"/>`;
+    s += `<rect x="${f(x - 12)}" y="${f(y + 1)}" width="2" height="7" fill="#6e5232"/><rect x="${f(x + 10)}" y="${f(y + 1)}" width="2" height="7" fill="#6e5232"/>`;
+  } else if (t === 'C') {
+    s += drawCityWall(x, y);
+  }
+  return s;
+}
+
+// 山地区域的云雾团
+function buildMist() {
+  let m = '';
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const t = terrain(c, r);
+    if ((t === 'M' || t === 'F') && rnd(c, r, 77) > .5) {
+      const p = pos(c, r);
+      m += `<ellipse cx="${f(p.x + (rnd(c, r, 78) - .5) * 18)}" cy="${f(p.y + (rnd(c, r, 79) - .5) * 16)}" ` +
+        `rx="${f(12 + rnd(c, r, 80) * 10)}" ry="${f(5 + rnd(c, r, 81) * 4)}" fill="rgba(255,255,250,.55)" filter="url(#f-mist)"/>`;
+    }
+  }
+  return m;
+}
+
+// 城池牌：势力旗 + 城名 + 兵力（万）
+function cityLabels() {
+  const info = (typeof CITY_INFO !== 'undefined' && CITY_INFO[SCENARIOS[state.scenario].id]) || {};
+  let out = '';
+  for (const key of Object.keys(info)) {
+    const [c, r] = key.split(',').map(Number);
+    const d = info[key], p = pos(c, r), x = p.x, y = p.y;
+    const occ = unitAt(c, r);
+    const side = occ ? occ.side : d.side;
+    const flag = side === 'player' ? '#2e7d5b' : '#9d3327';
+    const label = `${d.name} ${d.men}万`;
+    out += `<g class="city-label">` +
+      `<line x1="${f(x)}" y1="${f(y - 12)}" x2="${f(x)}" y2="${f(y - 30)}" stroke="${flag}" stroke-width="1.5"/>` +
+      `<path d="M ${f(x)} ${f(y - 30)} l 12 3 l -12 3 Z" fill="${flag}"/>` +
+      `<rect x="${f(x - 30)}" y="${f(y - 46)}" width="60" height="15" rx="3" fill="${flag}" stroke="rgba(255,240,215,.5)" stroke-width=".8"/>` +
+      `<text x="${f(x)}" y="${f(y - 35.5)}" class="city-name">${label}</text></g>`;
+  }
+  return out;
+}
+
 const state = {
   scenario: 0, map: [], units: [], turn: 1, side: 'player',
   selected: null, reach: new Map(), log: [], over: null, busy: false, uid: 1,
@@ -275,11 +399,11 @@ async function aiTurn() {
 function renderBoard() {
   const vbW = HEX * Math.sqrt(3) * (W + 0.5) + 36;
   const vbH = HEX * 1.5 * (H - 1) + HEX * 2 + 46;
-  // 立体棋盘：每种地形上表面渐变 + 侧壁暗色，形成国际象棋棋盘式的厚度
-  const SIDE = { P: '#b9a17a', F: '#8ba778', M: '#9b9387', R: '#7fa7ba', B: '#b39456', C: '#b98e6d', D: '#ae9a70' };
+  // 三国志11 写实地形配色：翠绿平原 / 深绿密林 / 灰白岩山 / 青灰江水
+  const SIDE = { P: '#7c9461', F: '#56734c', M: '#8d8b80', R: '#5c858e', B: '#9a8552', C: '#9a7f63', D: '#8f7c58' };
   const GRAD = {
-    P: ['#f5e9d0', '#d6c19d'], F: ['#d5e5c2', '#a9c294'], M: ['#ded8ce', '#b5ada0'],
-    R: ['#c5e0e9', '#8fb9cc'], B: ['#f0dca4', '#c6a566'], C: ['#efd1b1', '#c69b79'], D: ['#ecdcbb', '#c3ad82']
+    P: ['#d3e2ad', '#a7c47a'], F: ['#a7c98a', '#6f9a5f'], M: ['#dcd9cf', '#a3a197'],
+    R: ['#bcd6d4', '#7ea7a5'], B: ['#e8d9a8', '#bfa766'], C: ['#e3ccb0', '#b79a7c'], D: ['#ddcba4', '#ab9166']
   };
   let defs = '<defs>';
   for (const [t, cs] of Object.entries(GRAD)) {
@@ -290,9 +414,14 @@ function renderBoard() {
   defs += '<radialGradient id="g-head-player" cx="35%" cy="28%" r="75%"><stop offset="0" stop-color="#d9f0dc"/><stop offset="0.55" stop-color="#5c9674"/><stop offset="1" stop-color="#2c4f3b"/></radialGradient>';
   defs += '<radialGradient id="g-head-enemy" cx="35%" cy="28%" r="75%"><stop offset="0" stop-color="#ffd9c5"/><stop offset="0.55" stop-color="#c65c45"/><stop offset="1" stop-color="#6d211a"/></radialGradient>';
   defs += '<filter id="f-piece" x="-45%" y="-45%" width="190%" height="210%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#2c1d0d" flood-opacity="0.35"/></filter>';
+  defs += '<filter id="f-mist" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>';
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const p = pos(c, r);
+    defs += `<clipPath id="clip-${c}-${r}"><polygon points="${hexPoints(p.x, p.y)}"/></clipPath>`;
+  }
   defs += '</defs>';
 
-  let terrainSvg = '', overlaySvg = '', unitSvg = '';
+  let terrainSvg = '', detailSvg = '', overlaySvg = '', unitSvg = '';
   const sel = unitById(state.selected);
   for (let r = 0; r < H; r++) {
     for (let c = 0; c < W; c++) {
@@ -302,12 +431,11 @@ function renderBoard() {
       const side = arr.map(pt => { const [x, y] = pt.split(',').map(Number); return `${x},${(y + 6).toFixed(1)}`; }).join(' ');
       const shine = `${arr[0]} ${arr[1]} ${arr[5]}`;
       const shade = `${arr[2]} ${arr[3]} ${arr[4]}`;
-      const glyph = TERRAIN[t].glyph;
-      terrainSvg += `<g class="hex t-${t}">` +
+      terrainSvg += `<g class="hex t-${t}" data-c="${c}" data-r="${r}">` +
         `<polygon class="hex-side" points="${side}" fill="${SIDE[t]}"/>` +
         `<polygon class="hex-top" points="${top}" fill="url(#g-${t})"/>` +
-        `<polygon class="hex-shine" points="${shine}"/><polygon class="hex-shade" points="${shade}"/>` +
-        (glyph ? `<text class="terrain-glyph" x="${p.x}" y="${p.y + 6}">${glyph}</text>` : '') + `</g>`;
+        `<polygon class="hex-shine" points="${shine}"/><polygon class="hex-shade" points="${shade}"/>` + `</g>`;
+      detailSvg += `<g clip-path="url(#clip-${c}-${r})" class="hex-detail">${terrainDetail(t, c, r, p)}</g>`;
       let cls = '';
       if (sel && sel.col === c && sel.row === r) cls = 'sel';
       else if (sel && state.reach.has(k(c, r))) cls = 'reach';
@@ -315,6 +443,8 @@ function renderBoard() {
       if (cls) overlaySvg += `<polygon class="ov-${cls}" points="${top}"/>`;
     }
   }
+  const mistSvg = buildMist();
+  const labelSvg = cityLabels();
   for (const u of state.units) {
     const p = pos(u.col, u.row), tr = troop(u), rk = RANKS[u.rank];
     const isSel = state.selected === u.id;
@@ -338,18 +468,18 @@ function renderBoard() {
       `<title>${u.name} · ${tr.name} · ${rk.name}／${rk.title} · ${u.men}/${u.maxMen}人 · 战力${u.hp}/${u.maxHp}</title></g>`;
   }
   $('board').innerHTML =
-    `<svg viewBox="0 0 ${vbW.toFixed(0)} ${vbH.toFixed(0)}" role="img" aria-label="六边形立体作战地图">` +
-    defs + `<g id="terrainLayer">${terrainSvg}</g><g id="overlayLayer">${overlaySvg}</g>` +
+    `<svg viewBox="0 0 ${vbW.toFixed(0)} ${vbH.toFixed(0)}" role="img" aria-label="六边形写实作战地图">` +
+    defs + `<g id="terrainLayer">${terrainSvg}</g>` +
+    `<g id="detailLayer" class="fx-layer">${detailSvg}</g>` +
+    `<g id="mistLayer" class="fx-layer">${mistSvg}</g>` +
+    `<g id="cityLayer" class="fx-layer">${labelSvg}</g>` +
+    `<g id="overlayLayer" class="fx-layer">${overlaySvg}</g>` +
     `<g id="unitLayer">${unitSvg}</g></svg>`;
   $('board').querySelectorAll('#unitLayer g').forEach(g => {
     g.addEventListener('click', () => handleHex(Number(g.dataset.col), Number(g.dataset.row)));
   });
-  // 地形层按行优先顺序补上点击坐标
-  const hexGroups = $('board').querySelectorAll('#terrainLayer g');
-  let idx = 0;
-  hexGroups.forEach(g => {
-    const c = idx % W, r = Math.floor(idx / W); idx++;
-    g.addEventListener('click', () => handleHex(c, r));
+  $('board').querySelectorAll('#terrainLayer g').forEach(g => {
+    g.addEventListener('click', () => handleHex(Number(g.dataset.c), Number(g.dataset.r)));
   });
 }
 function renderInfo() {

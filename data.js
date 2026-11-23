@@ -292,6 +292,13 @@ const SCENARIOS = [
   }
 ];
 
+/* 城池牌：坐标 -> 城名、兵力（万）、默认守方。用于地图上的势力旗与兵力牌 */
+const CITY_INFO = {
+  luoyang:  { '6,4': { name: '洛阳', men: 12, side: 'enemy' } },
+  jingzhou: { '9,3': { name: '江陵', men: 8,  side: 'enemy' } },
+  dingjun:  { '6,3': { name: '定军山', men: 6, side: 'enemy' }, '6,4': { name: '夏侯渊营', men: 5, side: 'enemy' } }
+};
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { TERRAIN, TROOPS, RANKS, COMMANDER_RANKS, rankForUnit, SCENARIOS };
+  module.exports = { TERRAIN, TROOPS, RANKS, COMMANDER_RANKS, rankForUnit, SCENARIOS, CITY_INFO };
 }

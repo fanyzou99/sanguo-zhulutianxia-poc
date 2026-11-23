@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="三国·逐鹿天下 V0.8 POC：立体六边形战棋，11 兵种、汉制编制层级、地形影响、10 个经典作战场景。" />
-    <title>三国·逐鹿天下 — V0.8 立体棋盘 · 编制层级</title>
+    <meta name="description" content="三国·逐鹿天下 V0.9 POC：三国志11风格写实地形六边形战棋，11 兵种、汉制编制层级、城池与云雾、10 个经典作战场景。" />
+    <title>三国·逐鹿天下 — V0.9 写实地形 · 城池地图</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -18,7 +18,7 @@
           </div>
         </div>
         <div class="top-actions">
-          <span class="version">V0.8</span>
+          <span class="version">V0.9</span>
           <button id="rulesBtn" class="ghost">作战规则</button>
         </div>
       </header>
@@ -90,6 +90,7 @@
         <div class="modal-body">
           <h3>一、六边形战场</h3>
           <p>每个格子有 6 个相邻方向，距离按六边形轴向坐标计算。选中己方部队后，<b>蓝色格</b>为可移动范围，<b>红色标记</b>为可攻击目标。移动与攻击可连续进行，但每支部队每回合只行动一次；攻击后自动结束该部队行动。</p>
+          <p>地图采用<b>三国志11（VAN 修改器）风格</b>的写实地形绘制：灰白岩山配植被与云雾、青灰江河水波、方形城墙城池带势力旗与兵力牌、山间栈道与密林。地图细节为程序化生成，同一格每次渲染保持一致。</p>
 
           <h3>二、地形影响</h3>
           <ul>
