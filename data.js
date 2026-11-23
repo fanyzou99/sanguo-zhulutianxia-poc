@@ -1,4 +1,4 @@
-/* 三国·逐鹿天下 V0.7 — 兵种、地形与作战场景数据 */
+/* 三国·逐鹿天下 V0.8 — 兵种、地形、编制层级与作战场景数据 */
 
 const TERRAIN = {
   P: { label: '平原', glyph: '', desc: '无加成，通行顺畅' },
@@ -9,6 +9,36 @@ const TERRAIN = {
   C: { label: '城池', glyph: '城', desc: '守军防御 +35%，攻城器械对其伤害提升' },
   D: { label: '栈道', glyph: '━', desc: '单列通行，进入后不可越位、不可调换顺序' }
 };
+
+/* 汉制编制层级：idx 越高统辖越广，mul 为战斗系数，men 为标准人数 */
+const RANKS = {
+  wu:   { name: '伍',     mark: '伍', men: 5,     title: '伍长',               desc: '军队最基层的作战单位', idx: 0, mul: 0.90 },
+  shi:  { name: '什',     mark: '什', men: 10,    title: '什长',               desc: '由两个伍组成', idx: 1, mul: 0.95 },
+  dui:  { name: '队',     mark: '队', men: 50,    title: '队率（队正）',        desc: '设队率一人统领', idx: 2, mul: 1.00 },
+  tun:  { name: '屯',     mark: '屯', men: 100,   title: '屯长（百人将）',      desc: '由两队组成，设屯长一人', idx: 3, mul: 1.05 },
+  qu:   { name: '曲',     mark: '曲', men: 400,   title: '军候',               desc: '汉制一曲通常为两屯至五屯', idx: 4, mul: 1.10 },
+  bu:   { name: '部',     mark: '部', men: 1000,  title: '军司马（别部司马）',  desc: '满编约千人，独立编制称别部司马', idx: 5, mul: 1.15 },
+  ying: { name: '营 / 军', mark: '营', men: 4000, title: '校尉 / 中郎将',       desc: '中高级将领，如武卫校尉、虎贲中郎将', idx: 6, mul: 1.20 },
+  jun:  { name: '大军',   mark: '军', men: 12000, title: '将军',               desc: '偏将军、杂号将军、四征四镇等，独立指挥', idx: 7, mul: 1.25 }
+};
+
+// 知名将领按史实身份提升编制层级；其余按兵种默认
+const COMMANDER_RANKS = {
+  '周瑜': 'jun', '陆逊': 'jun', '关羽': 'jun', '张飞': 'jun', '赵云': 'ying',
+  '张辽': 'ying', '夏侯惇': 'ying', '曹仁': 'ying', '黄盖': 'bu', '程普': 'bu',
+  '甘宁': 'bu', '于禁': 'bu', '曹纯': 'bu', '颜良': 'ying', '文丑': 'ying',
+  '夏侯渊': 'jun', '黄忠': 'ying', '魏延': 'bu', '关兴': 'qu', '李典': 'bu',
+  '乐进': 'bu'
+};
+
+function rankForUnit(u) {
+  if (u.rank && RANKS[u.rank]) return u.rank;
+  if (COMMANDER_RANKS[u.name]) return COMMANDER_RANKS[u.name];
+  if (u.type === 'shuijun') return 'bu';
+  if (u.type === 'qi' || u.type === 'xiang') return 'qu';
+  if (u.type === 'nuche' || u.type === 'toushi' || u.type === 'huoqi') return 'dui';
+  return 'tun';
+}
 
 // cost: 进入该地形的移动力消耗，99 表示不可通行
 const TROOPS = {
@@ -79,7 +109,7 @@ const TROOPS = {
   }
 };
 
-const U = (type, col, row, name) => ({ type, col, row, name });
+const U = (type, col, row, name, rank) => ({ type, col, row, name, ...(rank ? { rank } : {}) });
 
 function mapFromRows(rows, width = 13) {
   return rows.map(r => r.padEnd(width, 'P').slice(0, width));
@@ -263,5 +293,5 @@ const SCENARIOS = [
 ];
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { TERRAIN, TROOPS, SCENARIOS };
+  module.exports = { TERRAIN, TROOPS, RANKS, COMMANDER_RANKS, rankForUnit, SCENARIOS };
 }

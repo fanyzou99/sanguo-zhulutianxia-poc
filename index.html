@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="三国·逐鹿天下 V0.7 POC：六边形战棋，11 兵种、地形影响、10 个经典作战场景。" />
-    <title>三国·逐鹿天下 — V0.7 六边形 · 十一兵种</title>
+    <meta name="description" content="三国·逐鹿天下 V0.8 POC：立体六边形战棋，11 兵种、汉制编制层级、地形影响、10 个经典作战场景。" />
+    <title>三国·逐鹿天下 — V0.8 立体棋盘 · 编制层级</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -18,7 +18,7 @@
           </div>
         </div>
         <div class="top-actions">
-          <span class="version">V0.7</span>
+          <span class="version">V0.8</span>
           <button id="rulesBtn" class="ghost">作战规则</button>
         </div>
       </header>
@@ -70,6 +70,10 @@
             <div class="panel-title"><h2>兵种图鉴</h2><span>11 类</span></div>
             <div id="troopList" class="troop-list"></div>
           </div>
+          <div class="card">
+            <div class="panel-title"><h2>编制层级</h2><span>点击筛选棋子</span></div>
+            <div id="rankList" class="rank-list"></div>
+          </div>
           <div class="card log-card">
             <div class="panel-title"><h2>战报</h2></div>
             <div id="battleLog" class="battle-log"></div>
@@ -106,6 +110,22 @@
 
           <h3>四、十个战场</h3>
           <p>赤壁之战（江水横亘）· 合肥之战（纯平原）· 洛阳之战（城池攻守）· 山林之战（山密林深）· 蜀道难（单列栈道）· 夷陵之战（林江交错）· 官渡之战（平原翼击）· 潼关之战（关隘险道）· 荆州之战（江湖水网）· 定军山之战（山地攻坚）。</p>
+
+          <h3>五、汉制编制层级（融入对战）</h3>
+          <table class="rank-table">
+            <thead><tr><th>编制</th><th>标准人数</th><th>统帅官职</th><th>补充说明</th></tr></thead>
+            <tbody>
+              <tr><td>伍</td><td>5 人</td><td>伍长</td><td>军队最基层的作战单位</td></tr>
+              <tr><td>什</td><td>10 人</td><td>什长</td><td>由两个伍组成</td></tr>
+              <tr><td>队</td><td>50 人</td><td>队率（队正）</td><td>设队率一人统领</td></tr>
+              <tr><td>屯</td><td>100 人</td><td>屯长（百人将）</td><td>由两队组成，设屯长一人</td></tr>
+              <tr><td>曲</td><td>200—500 人</td><td>军候</td><td>两屯至五屯，设军候统领</td></tr>
+              <tr><td>部</td><td>1000 人</td><td>军司马</td><td>满编约千人；独立编制称别部司马</td></tr>
+              <tr><td>营 / 军</td><td>2000—5000 人以上</td><td>校尉 / 中郎将</td><td>武卫校尉、虎贲中郎将等中高级将领</td></tr>
+              <tr><td>大军</td><td>万人以上</td><td>将军</td><td>偏将军、杂号将军、四征四镇等，独立指挥</td></tr>
+            </tbody>
+          </table>
+          <p>每枚棋子都带有编制、官职与标准人数：知名将领按身份取“营/军/大军”，水军为“部”，骑兵与象兵为“曲”，器械为“队”，常规步弩为“屯”。<b>高阶编制带来更高战斗系数</b>，攻击低阶部队另有克制；<b>相邻一格内的上级部队会“节度”下级</b>，提供最高 +20% 的攻防加成。点击右侧编制按钮可高亮同层级棋子。</p>
         </div>
       </div>
     </div>
